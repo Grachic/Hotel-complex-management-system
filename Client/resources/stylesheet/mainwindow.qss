@@ -1,0 +1,60 @@
+QWidget#centralwidget
+{
+    background-color: #795855;
+}
+
+QStackedWidget#centralStackedWidget {
+	background-color: #8d6b65;
+	border-radius: 5px;
+}
+
+QLabel {
+	color: #FFF8C9;
+}
+
+QLabel#errorLabel_welcome, QLabel#errorLabel_register {
+	color: #b00303;
+}
+
+QLabel#warningLabel_register {
+	color: #ecdd06;
+}
+
+QLineEdit
+{
+	background-color: #fefbe8;
+	border-radius: 5px;
+}
+
+QProgressBar
+{
+    background-color: #94250c;
+    border: 2px solid #fff7eb;
+    border-radius: 5px;
+}
+
+QPushButton
+{
+	border: 1px solid #dfdede;
+	border-radius: 6px;
+	background-color:none;
+	color: #fefbe8;
+	font: 63 11pt "Transforma Script_Trial SmBold";
+}
+
+QPushButton:hover {
+  background-color: #9a9797;
+}
+
+QPushButton:checked {
+    background-color: #9a9797;
+}
+
+QPushButton:unchecked {
+    background-color: none;
+}
+
+QDialogButtonBox#buttonBox_register QPushButton {
+    height: 25px;
+    width: 80px;
+}

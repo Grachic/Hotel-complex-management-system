@@ -1,0 +1,32 @@
+<RCC>
+  <qresource prefix="svg">
+    <file>assets/svg/logo.svg</file>
+    <file>assets/svg/logo_mini.svg</file>
+    <file>assets/svg/logo_no_bg.svg</file>
+  </qresource>
+  <qresource prefix="qss">
+    <file>resources/stylesheet/mainwindow.qss</file>
+    <file>resources/stylesheet/usercontrolinterface.qss</file>
+  </qresource>
+  <qresource prefix="img">
+    <file>assets/img/bathroom_common.png</file>
+    <file>assets/img/bathroom_lux.png</file>
+    <file>assets/img/bedroom_common.png</file>
+    <file>assets/img/bedroom_common_1.png</file>
+    <file>assets/img/bedroom_lux.png</file>
+    <file>assets/img/bedroom_lux_1.png</file>
+    <file>assets/img/livingroom_lux.png</file>
+    <file>assets/img/livingroom_lux_1.png</file>
+  </qresource>
+  <qresource prefix="ttf">
+    <file>assets/font/TransformaScript_Trial-ExtraLight.ttf</file>
+    <file>assets/font/TransformaScript_Trial-Light.ttf</file>
+    <file>assets/font/TransformaScript_Trial-Medium.ttf</file>
+    <file>assets/font/TransformaScript_Trial-Regular.ttf</file>
+    <file>assets/font/TransformaScript_Trial-SemiBold.ttf</file>
+    <file>assets/font/TransformaVariable-Script.ttf</file>
+    <file>assets/font/Trirong-Bold.ttf</file>
+    <file>assets/font/Trirong-Light.ttf</file>
+    <file>assets/font/Trirong-Regular.ttf</file>
+  </qresource>
+</RCC>

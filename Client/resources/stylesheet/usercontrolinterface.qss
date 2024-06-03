@@ -1,0 +1,26 @@
+QCalendarWidget {
+    border: 1px;
+    border-radius: 6px;
+    background-color: #634a49;
+}
+
+QComboBox
+{
+    border: 1px;
+    border-radius: 6px;
+    background-color:none;
+    color: #000000;
+    font: 63 11pt "Transforma Script_Trial SmBold";
+}
+
+QPushButton
+{
+	border: 1px;
+	border-radius: 6px;
+	background-color: #ededed;
+	color: #000000;
+}
+
+QPushButton:hover {
+  background-color: #c8c8c8;
+}
