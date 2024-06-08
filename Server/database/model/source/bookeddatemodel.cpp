@@ -27,8 +27,8 @@ int BookedDateModel::getId(int row) {
 QHash<int, QByteArray> BookedDateModel::roleNames() const {
     QHash<int, QByteArray> roles;
     roles[IdRole] = "id_int_pk_ai";
-    roles[HotelRoomIdRole] = "HotelRoomId_int_nn";
-    roles[UserIdRole] = "UserId_int_nn";
+    roles[HotelRoomNumberRole] = "HotelRoomNumber_txt_nn";
+    roles[UserLoginRole] = "UserLogin_txt_nn";
     roles[BookedDateStartRole] = "BookedDateStart_date_nn";
     roles[BookedDateEndRole] = "BookedDateEnd_date_nn";
     return roles;

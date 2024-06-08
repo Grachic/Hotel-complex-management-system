@@ -15,8 +15,8 @@ class BookedDateModel : public QSqlQueryModel {
 public:
     enum Roles {
         IdRole = Qt::UserRole + 1, // id
-        HotelRoomIdRole,
-        UserIdRole,
+        HotelRoomNumberRole,
+        UserLoginRole,
         BookedDateStartRole,
         BookedDateEndRole
     };

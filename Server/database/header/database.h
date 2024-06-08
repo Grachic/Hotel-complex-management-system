@@ -25,7 +25,7 @@ public:
     explicit Database(QObject *parent = nullptr);
     ~Database() override;
     void connectToDataBase();
-
+    void closeDataBase();       // Закрытие базы данных
 
 public slots:
     static QSqlRecord findInTable(const QVariantList &data, const QString& tableName);
@@ -40,7 +40,6 @@ private:
 
     bool openDataBase();        // Открытие базы данных
     bool restoreDataBase();     // Восстановление базы данных
-    void closeDataBase();       // Закрытие базы данных
     static bool createTable(const QString& tableName, const QSqlQueryModel& model);         // Создание базы таблицы в базе данных
 };
 

@@ -1,7 +1,27 @@
-QCalendarWidget {
-    border: 1px;
-    border-radius: 6px;
-    background-color: #634a49;
+CalendarWidget#reservationCalendarWidget
+{
+    border-radius:8px;
+}
+
+CalendarWidget#reservationCalendarWidget #qt_calendar_calendarview
+{
+    background-color: #faf7f6;
+    alternate-background-color: #faf7f6;
+    color: #584a44;
+    selection-background-color: #9a7668;
+    border-bottom-radius:8px;
+}
+
+CalendarWidget#reservationCalendarWidget #qt_calendar_navigationbar
+{
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    background: #634a49;
+}
+
+QMessageBox QLabel {
+    color: #000000;
+    font: 10pt "Trirong";
 }
 
 QComboBox

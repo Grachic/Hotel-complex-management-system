@@ -7,15 +7,18 @@
 #include "../header/usercontrolinterface.h"
 #include "../ui/ui_UserControlInterface.h"
 
-UserControlInterface::UserControlInterface(QWidget *parent, QStringList userReservations) :
-        QWidget(parent), ui(new Ui::UserControlInterface) {
+UserControlInterface::UserControlInterface(QWidget *parent, Client *networkClient, UserProfile profile) :
+        QWidget(parent), m_networkClient(networkClient), m_userProfile(profile), ui(new Ui::UserControlInterface) {
     ui->setupUi(this);
+
+    connect(&*m_networkClient, &Client::responseGot,
+            this, &UserControlInterface::getServerResponse);
+
+    fillUserUI();
 
     auto *qssFile = new QFile(":/qss/resources/stylesheet/usercontrolinterface.qss");
     qssFile->open(QFile::ReadOnly);
     this->setStyleSheet(QTextStream(qssFile).readAll());
-
-    fillUserUI();
 }
 
 UserControlInterface::~UserControlInterface() {
@@ -24,9 +27,21 @@ UserControlInterface::~UserControlInterface() {
 
 void UserControlInterface::fillUserUI() {
     auto *calendarWidget = new CalendarWidget();
+    calendarWidget->setObjectName("reservationCalendarWidget");
+    calendarWidget->setVerticalHeaderFormat(QCalendarWidget::NoVerticalHeader);
     calendarWidget->setMinimumDate(QDate::currentDate());
     calendarWidget->setMaximumDate(QDate(QDate::currentDate().year(), 12, 31));
-    calendarWidget->setParent(ui->reservationFrame);
+    ui->reservationGrid->addWidget(calendarWidget, 0, 0);
+
+    ui->hotelMapFrame->setEnabled(false);
+
+    connect(ui->choseDateButton, &QPushButton::clicked,
+            this, &UserControlInterface::onChoseDateButtonClicked);
+    connect(ui->floorComboBox, &QComboBox::currentTextChanged,
+            this, &UserControlInterface::onCurrentFloorChanged);
+    for (int i = 1; i <= 20; ++i)
+        connect(this->findChild<QPushButton*>("room" + QString::number(i) + "Button"), &QPushButton::clicked,
+                this, &UserControlInterface::onRoomButtonClicked);
 
     for (auto button: this->findChildren<QPushButton *>()) {
         QString iconPath = "";
@@ -75,6 +90,74 @@ bool UserControlInterface::eventFilter(QObject *obj, QEvent *event) {
     return QWidget::eventFilter(obj, event);
 }
 
+void UserControlInterface::onChoseDateButtonClicked() {
+    auto *calendar = this->findChild<CalendarWidget*>("reservationCalendarWidget");
+    QString dateRange = calendar->minSelectedDate().toString(Qt::DateFormat::DefaultLocaleShortDate) + "-" +
+            calendar->maxSelectedDate().toString(Qt::DateFormat::DefaultLocaleShortDate);
+
+    ui->chosedDateLabel->setText(dateRange);
+    m_networkClient->sendToServer("Signal(getReserveMap):::" + dateRange);
+}
+
+void UserControlInterface::getServerResponse(const QString &response) {
+    if (response.contains("(Error)")) {
+        ui->chosedDateLabel->setText(response.split("/").first().remove("(Error)"));
+        return;
+    }
+    if (response.contains("(Success)")) {
+        auto* toastr = new EToastr(reinterpret_cast<EWidget *>(this));
+        toastr->setStyle(EToastr::TOASTR_STYLE::SUCCESS);
+        toastr->setText(response);
+        toastr->show(EToastr::TOASTR_DIRECTION::TOP_TO_BOTTOM);
+
+        m_networkClient->sendToServer("Signal(getReserveMap):::" + ui->chosedDateLabel->text());
+        return;
+    }
+
+    ui->hotelMapFrame->setEnabled(true);
+
+    if (m_reservedRooms.isEmpty()) {
+        int floorCount = response.split(":::").first().toInt();
+        QStringList floors; for(int i = 1; i < floorCount + 1; ++i) floors << QString::number(i) + " floor";
+        ui->floorComboBox->addItems(floors);
+    }
+
+    if (response.split(":::").count() == 1) return;
+
+    m_reservedRooms = response.split(":::").last().split("/");
+}
+
+void UserControlInterface::onCurrentFloorChanged(const QString &currentText) {
+    for (auto &roomData : m_reservedRooms) {
+        QString roomIndex = roomData.split(",").first().split("_").last();
+        if (roomIndex == currentText)
+            ui->hotelMapFrame->findChild<QPushButton*>("room" + roomIndex + "Button")->setEnabled(false);
+    }
+}
+
+void UserControlInterface::onRoomButtonClicked() {
+    auto *senderButton = (QPushButton*)sender();
+    QString roomNumber = QString(ui->floorComboBox->currentText()).remove(QRegExp("\\D")) +
+            "_" +
+            QString(senderButton->objectName()).remove(QRegExp("\\D"));
+
+    QMessageBox::StandardButton reply = QMessageBox::question(this,
+                                                             "Room " + roomNumber,
+                                                             "Do you really want to book room " + roomNumber + "\nbetween " + ui->chosedDateLabel->text() + "?",
+                                                             QMessageBox::Yes | QMessageBox::No);
+    if (reply == QMessageBox::Yes) {
+        QString clientRequest = "";
+        clientRequest.append("Signal(setReserveMap)");
+        clientRequest.append(":::");
+        clientRequest.append(roomNumber);
+        clientRequest.append(":::");
+        clientRequest.append(m_userProfile.Login);
+        clientRequest.append(":::");
+        clientRequest.append(ui->chosedDateLabel->text());
+        m_networkClient->sendToServer(clientRequest);
+    }
+}
+
 CalendarWidget::CalendarWidget(QWidget *parent) :
         QCalendarWidget(parent)
 {
@@ -87,13 +170,15 @@ CalendarWidget::CalendarWidget(QWidget *parent) :
 
 void CalendarWidget::paintCell(QPainter *painter, const QRect &rect, const QDate &date) const
 {
-    if((date >= minDate && date <= maxDate) && date != selectedDate() )
+    if ((date >= minDate && date <= maxDate))
     {
-        painter->fillRect (rect, Qt::yellow);
-        painter->drawText (rect, Qt::AlignCenter | Qt::AlignHCenter,
-                           QString::number(date.day ()));
+        if (date == minDate || date == maxDate) painter->fillRect (rect, "#9a7668");
+        else painter->fillRect (rect, "#dcccc5");
+        painter->drawText(rect, Qt::AlignCenter | Qt::AlignHCenter,
+                          QString::number(date.day()));
         return;
     }
+
     QCalendarWidget::paintCell(painter,rect,date);
 }
 
@@ -109,7 +194,6 @@ void CalendarWidget::setSelectedDate()
         minDate = maxDate = date;
     updateCells();
 }
-
 
 bool CalendarWidget::eventFilter(QObject *obj, QEvent *event)
 {

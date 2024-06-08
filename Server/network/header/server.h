@@ -9,6 +9,7 @@
 #include <QTcpSocket>
 #include <QDataStream>
 #include <QRegularExpression>
+#include <QSqlField>
 #include "../../log/header/logger.h"
 #include "../../constants/constants.h"
 #include "../../database/header/database.h"
@@ -18,6 +19,7 @@ class Server : public QTcpServer {
 
 public:
     Server();
+    ~Server() override;
     QTcpSocket *socket{};
 
     void sendToClient(const QString& message);

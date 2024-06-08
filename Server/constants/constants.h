@@ -12,7 +12,7 @@
 #define DATABASE_HOSTNAME   "HotelDataBase"
 #define DATABASE_NAME       "hotel.db"
 // Accounting
-#define ALL_DATABASE_TABLES_NAMES "Users, Employees, HotelRooms, BookedData"
+#define ALL_DATABASE_TABLES_NAMES "Users, Employees, HotelRooms, BookedDate"
 
 /// USER
 #define USER_MODEL_DATABASE_PARAMETERS "FirstName, SecondName, Patronymic, Login, Password, PasswordHint, PasswordRestore, UserRole"
@@ -33,8 +33,8 @@
 #define HOTELROOMS_DATABASE_COUNT_FLOORS 5
 
 /// BOOKED DATE
-#define BOOKEDDATE_MODEL_DATABASE_PARAMETERS "HotelRoomId, UserId, BookedDateStart, BookedDateEnd"
-#define BOOKEDDATE_MODEL_DATABASE_PARAMETERS_KEYS ":HotelRoomId, :UserId, :BookedDateStart, :BookedDateEnd"
-#define BOOKEDDATE_MODEL_DATABASE_TABLE_NAME "BookedData"
+#define BOOKEDDATE_MODEL_DATABASE_PARAMETERS "HotelRoomNumber, UserLogin, BookedDateStart, BookedDateEnd"
+#define BOOKEDDATE_MODEL_DATABASE_PARAMETERS_KEYS ":HotelRoomNumber, :UserLogin, :BookedDateStart, :BookedDateEnd"
+#define BOOKEDDATE_MODEL_DATABASE_TABLE_NAME "BookedDate"
 
 #endif //SERVER_CONSTANTS_H

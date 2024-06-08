@@ -24,11 +24,11 @@ void Server::incomingConnection(qintptr socketDescriptor) {
 }
 
 void Server::slotReadyRead() {
-    socket = (QTcpSocket*)sender();
+    socket = (QTcpSocket *) sender();
     QDataStream in(socket);
     in.setVersion(QDataStream::Qt_5_12);
     if (in.status() == QDataStream::Ok) {
-        for(;;) {
+        for (;;) {
 
             if (m_nextBlockSize == 0) {
                 if (socket->bytesAvailable() < 2) break;
@@ -45,13 +45,12 @@ void Server::slotReadyRead() {
             break;
         }
         parseClientRequest();
-    }
-    else {
+    } else {
         qCritical(logCritical()) << "DataStream error (slotReadyRead)";
     }
 }
 
-void Server::sendToClient(const QString& message) {
+void Server::sendToClient(const QString &message) {
     m_data.clear();
     QDataStream out(&m_data, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_12);
@@ -77,29 +76,29 @@ void Server::parseClientRequest() {
         else if (record.value("Password").toString() != m_clientRequestMessage.split(":::").at(2))
             serverResponse = "(Error)Incorrect password!/(Hint)" + record.value("PasswordHint").toString();
         else if (record.value("Password").toString() == m_clientRequestMessage.split(":::").at(2)) {
-            /*QSqlRecord userBookedInfoRecord = Database::findInTable({record.value("id").toInt()},
-                                                                    BOOKEDDATE_MODEL_DATABASE_TABLE_NAME);*/
             serverResponse.append(record.value("UserRole").toString());
+            serverResponse.append(":::");
+            serverResponse.append(
+                    record.value("PasswordHint").toString().isEmpty() ? " " : record.value("PasswordHint").toString());
+            serverResponse.append(":::");
+            serverResponse.append(record.value("PasswordRestore").toString().isEmpty() ? " " : record.value(
+                    "PasswordRestore").toString());
 
-            /*if (!userBookedInfoRecord.isEmpty()) {
-                QString bookedRooms = "";
-                for (int i = 0; userBookedInfoRecord.count(); ++i) {
-                    bookedRooms.append(userBookedInfoRecord.value("HotelRoomId").toString());
-                    bookedRooms.append(",");
-                    bookedRooms.append(userBookedInfoRecord.value("BookedDateStart").toDate().toString());
-                    bookedRooms.append(",");
-                    bookedRooms.append(userBookedInfoRecord.value("BookedDateEnd").toDate().toString());
-                    if (i != userBookedInfoRecord.count() - 1) bookedRooms.append("___");
-                }
-
+            QSqlRecord reservationRecord = Database::findInTable(
+                    {"getReserveForUser", m_clientRequestMessage.split(":::").at(1)},
+                    BOOKEDDATE_MODEL_DATABASE_TABLE_NAME);
+            if (!reservationRecord.isEmpty()) {
                 serverResponse.append(":::");
-                serverResponse.append(bookedRooms);
-            }*/
+                for (int i = 0; i < reservationRecord.count(); ++i) {
+                    serverResponse.append(reservationRecord.value(i).toString());
+                    serverResponse.append("/");
+                }
+            }
         }
         qDebug(logInfo()) << serverResponse;
         sendToClient(serverResponse);
     }
-    if (m_clientRequestMessage.contains("Signal(signUp)")) {
+    else if (m_clientRequestMessage.contains("Signal(signUp)")) {
         QVariantList userData;
 
         QStringList userParameters = m_clientRequestMessage.split(":::");
@@ -120,4 +119,42 @@ void Server::parseClientRequest() {
             sendToClient("(Error)Sorry, this login is already taken!");
         }
     }
+    else if (m_clientRequestMessage.contains("Signal(getReserveMap)")) {
+        QVariantList userData = {"getReserveMap", m_clientRequestMessage.split(":::").last()};
+
+        QString serverResponse = "";
+        QSqlRecord record = Database::findInTable(userData, BOOKEDDATE_MODEL_DATABASE_TABLE_NAME);
+
+        serverResponse.append(QString::number(HOTELROOMS_DATABASE_COUNT_FLOORS));
+        if (!record.isEmpty()) {
+            serverResponse.append(":::");
+            for (int i = 0; i < record.count(); ++i) {
+                serverResponse.append(record.value(i).toString());
+                serverResponse.append("/");
+            }
+            qInfo(logInfo()) << serverResponse;
+            sendToClient(serverResponse);
+        }
+    }
+    else if (m_clientRequestMessage.contains("Signal(setReserveMap)")) {
+        QVariantList userData;
+
+        QStringList userParameters = m_clientRequestMessage.split(":::");
+        userData.append(userParameters.at(1));
+        userData.append(userParameters.at(2));
+        userData.append(userParameters.at(3).split("-").first());
+        userData.append(userParameters.at(3).split("-").last());
+
+        if (Database::insertIntoTable(userData, BOOKEDDATE_MODEL_DATABASE_TABLE_NAME)) {
+            qInfo(logInfo()) << "Room: " + userParameters.at(1) + " successfully reserved!";
+            sendToClient("(Success)Room: " + userParameters.at(1) + " successfully reserved!");
+        } else {
+            qCritical(logCritical()) << "Check \"insertIntoTable\" method!";
+            sendToClient("(Error)Sorry, some problems on server!");
+        }
+    }
+}
+
+Server::~Server() {
+    m_database.closeDataBase();
 }

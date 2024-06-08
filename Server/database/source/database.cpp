@@ -5,7 +5,7 @@
 #include "../header/database.h"
 
 Database::Database(QObject *parent) : QObject(parent), m_databaseDirectory(QDir::currentPath()),
-                                      m_databaseLogger("database") {
+                                      m_databaseLogger("server") {
     m_databaseDirectory.mkpath("database/output");
 }
 
@@ -99,8 +99,22 @@ QSqlRecord Database::findInTable(const QVariantList &data, const QString &tableN
         query.prepare("SELECT * FROM " USER_MODEL_DATABASE_TABLE_NAME);
     }
 
-    if (tableName == BOOKEDDATE_MODEL_DATABASE_TABLE_NAME) {
-        query.prepare("SELECT * FROM " BOOKEDDATE_MODEL_DATABASE_TABLE_NAME " WHERE UserId = " + data[0].toString());
+    if (tableName == BOOKEDDATE_MODEL_DATABASE_TABLE_NAME && data.first() == "getReserveForUser") {
+        query.prepare("SELECT * FROM "
+                      BOOKEDDATE_MODEL_DATABASE_TABLE_NAME " "
+                      "WHERE UserLogin = :login");
+
+        query.bindValue(":login", data.last().toString());
+    }
+
+    if (tableName == BOOKEDDATE_MODEL_DATABASE_TABLE_NAME && data.first() == "getReserveMap") {
+        query.prepare("SELECT * FROM "
+                      BOOKEDDATE_MODEL_DATABASE_TABLE_NAME " "
+                      "WHERE (BookedDateStart >= :startDate AND BookedDateStart <= :endDate) OR "
+                      "(BookedDateEnd >= :startDate AND BookedDateEnd <= :endDate)");
+
+        query.bindValue(":startDate", data.last().toString().split("-").first().remove('.'));
+        query.bindValue(":endDate", data.last().toString().split("-").last().remove('.'));
     }
 
     if (!query.exec()) {
@@ -118,7 +132,18 @@ QSqlRecord Database::findInTable(const QVariantList &data, const QString &tableN
         }
 
         if (tableName == BOOKEDDATE_MODEL_DATABASE_TABLE_NAME) {
-            return query.record();
+            QStringList result;
+            while (query.next()) {
+                result.append(query.value("HotelRoomNumber").toString());
+                result.append(",");
+                result.append(query.value("BookedDateStart").toString());
+                result.append("-");
+                result.append(query.value("BookedDateEnd").toString());
+            }
+            QSqlRecord resultedRecord;
+            for (int i = 0; i < result.count(); ++i)
+                resultedRecord.setValue(i, result.at(i));
+            return resultedRecord;
         }
     }
 
@@ -175,9 +200,9 @@ bool Database::insertIntoTable(const QVariantList &data, const QString &tableNam
         int i = 0;
         for (auto &key: QString(BOOKEDDATE_MODEL_DATABASE_PARAMETERS_KEYS).simplified().split(", ")) {
             if (data[i].canConvert<QDate>())
+                query.bindValue(key, data[i].toDate());
+            else if (data[i].canConvert<QString>())
                 query.bindValue(key, data[i].toString());
-            else if (data[i].canConvert<int>())
-                query.bindValue(key, data[i].toDouble());
             i++;
         }
     }

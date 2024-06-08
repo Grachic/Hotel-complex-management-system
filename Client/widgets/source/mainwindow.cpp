@@ -162,7 +162,18 @@ void MainWindow::getServerResponse(const QString &response) {
         if (ui->centralStackedWidget->currentIndex() == WELCOME_PAGE) {
             int pageIndex = WELCOME_PAGE;
             if (response.contains("User")) {
-                auto *userUi = new UserControlInterface(ui->centralStackedWidget);
+                UserProfile profile;
+                profile.Login = ui->loginLineEdit_welcome->text();
+                profile.Password = ui->passwordLineEdit_welcome->text();
+                profile.PasswordHint = response.split(":::").at(1);
+                profile.PasswordRestore = response.split(":::").at(2);
+                if (response.split(":::").count() == 4) {
+                    for (auto &roomDate : response.split(":::").at(3).split("/"))
+                        profile.Reservations.insert(roomDate.split(",").first(), roomDate.split(",").last());
+
+                }
+
+                auto *userUi = new UserControlInterface(ui->centralStackedWidget, &m_networkClient, profile);
                 ui->centralStackedWidget->insertWidget(USER_PAGE, userUi);
                 pageIndex = USER_PAGE;
             }
